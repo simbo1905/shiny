@@ -1,0 +1,140 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "shiny-centos7",
+    "creationTimestamp": null,
+    "annotations": {
+      "description": "RStudio Shiny Server ShinyR on centos7 and openshift",
+      "iconClass": "icon-ruby",
+      "tags": "instant-app,shiny,r"
+    }
+  },
+  "objects": [
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "frontend",
+        "creationTimestamp": null
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "web",
+            "protocol": "TCP",
+            "port": 3838,
+            "targetPort": 3838,
+            "nodePort": 0
+          }
+        ],
+        "selector": {
+          "name": "frontend"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "route-edge",
+        "creationTimestamp": null,
+        "annotations": {
+          "template.openshift.io/expose-uri": "http://{.spec.host}{.spec.path}"
+        }
+      },
+      "spec": {
+        "host": "www.example.com",
+        "to": {
+          "kind": "Service",
+          "name": "frontend"
+        },
+        "tls": {
+          "termination": "edge"
+        }
+      },
+      "status": {}
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "shiny-centos7",
+        "creationTimestamp": null
+      },
+      "spec": {
+        "dockerImageRepository": "simonmassey/shiny"
+      },
+      "status": {
+        "dockerImageRepository": ""
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "frontend"
+      },
+      "spec": {
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "frontend"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "shiny-centos7",
+                "image": "shiny-centos7",
+                "ports": [
+                  {
+                    "containerPort": 3838,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                ]
+              }
+            ]
+          }
+        },
+        "replicas": 2,
+        "selector": {
+          "name": "frontend"
+        },
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "shiny-centos7"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "shiny-centos7:20160811_1631"
+              }
+            }
+          }
+        ],
+        "strategy": {
+          "type": "Rolling"
+        }
+      }
+    }
+  ],
+  "parameters": [
+  ],
+  "labels": {
+    "template": "application-template-dockerbuild"
+  }
+}
