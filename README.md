@@ -29,4 +29,4 @@ and edit the tag `20160811_1631` in the following line to be that tag you pushed
 
 TODO: 
 
-[ ] setup a build pipline in thier dockerhub or openshift to deploy automatically
+[ ] setup a build pipline in either dockerhub or openshift to deploy automatically
